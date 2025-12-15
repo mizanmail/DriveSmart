@@ -1,180 +1,392 @@
-# **📌 Product Requirements Document (PRD)**
+# DriveSmart Web Admin & Dispatch System (v1.0)
 
-**Project:** DriveSmart — Web Admin & Dispatch System (v1.0)  
-**Type:** Web Application (Admin + Dispatcher + Analytics)  
-**Target Audience:** Admins, Dispatchers, Support Agents, Finance Analysts  
+> 🚗 **A comprehensive ride-hailing platform admin panel** with real-time driver tracking, booking management, and dispatch capabilities.
 
----
-
-### **D. Super Admin (Platform Guardian)**
-*   **Role:** The highest authority responsible for platform maintenance.
-*   **Responsibilities:**
-    *   **User Management:** Oversee all Customers, Drivers, and Vehicle Owners.
-    *   **Verification:** Approve driver identities and vehicle documents.
-    *   **Operations:** Handle complaints, monitor system health, and ensure fair dispatching.
-
-## **3. User Onboarding Flow**
-1.  **Unified Sign Up:** All users start with a verified phone/email.
-2.  **Role Selection:**
-    *   **"I need a ride"** -> Becomes **Customer**.
-    *   **"I want to drive (No Vehicle)"** -> Becomes **Non-vehicle Driver** (Fleet).
-    *   **"I have a vehicle"** -> Becomes **Vehicle-Owner Driver**.
-3.  **Personalization:** System grants permissions and dashboard features based on this choice.
-
-
-### **A. Customers (Ride-Seekers)**
-*   **Goal:** Request reliable transportation from point A to B.
-*   **Key Features:** easy booking, fare estimation, safe payments, ride tracking.
-
-### **B. Non-vehicle Drivers (The Workforce)**
-*   **Profile:** Skilled professionals who do *not* own a vehicle.
-*   **Goal:** Receive driving assignments and earn a livelihood.
-*   **Key Needs:** Job availability, vehicle assignment, transparent payout.
-
-### **C. Vehicle-Owner Drivers (The Providers)**
-*   **Profile:** Individuals who own one or more vehicles.
-*   **Role Flexibility (Hybrid):**
-    1.  **Owner-Operator:** Drives their own vehicle.
-    2.  **Asset Provider:** Rents out vehicle(s) to Non-vehicle Drivers (passive income).
-*   **Key Needs:** Asset tracking, earnings sharing, driver assignment management.
-
-
-## **1. Overview & Vision**
-
-**DriveSmart** is a ride-booking ecosystem connecting passengers with drivers. A mobile MVP (React Native + Supabase) already exists for users and drivers. This PRD defines the **Web Platform** (v1.0) designed to manage, control, and analyze the entire system.
-
-### **The Vision: Bridging Opportunity and Skill**
-The core purpose of DriveSmart is to **create employment opportunities** for individuals who possess driving skills but lack financial resources. The platform acts as a bridge:
-*   **Non-vehicle Drivers** (Skill) get jobs.
-*   **Vehicle Owners** (Resources) monetize their idle assets.
-*   **Customers** get reliable rides.
-
-### **Core Objectives**
-1.  **Employment Creation:** Empower skilled drivers to earn without owning a car.
-2.  **Asset Utilization:** Allow vehicle owners to share earnings by letting others drive.
-3.  **Operational Control:** Admin panel to manage these pairings/assignments.
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen)
+![React](https://img.shields.io/badge/React-18-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
 
 ---
 
-## **2. Scope**
+## 📋 Table of Contents
 
-### **A. Admin Portal**
-For super-users to configure the system, pricing, and staff access.
-
-### **B. Dispatcher / Operations Panel**
-For real-time monitoring of active bookings, driver locations, and ride status handling.
-
-### **C. Analytics Dashboard**
-High-level metrics on revenue, user growth, and system health.
-
-**Out of Scope for v1:**
-*   **New Mobile App Features:** We are not building the mobile app, only the admin panel.
-*   **Automated AI Matching:** Manual dispatch first.
-*   **Driver Payouts Automation:** Manual payouts first.
-
----
-
-## **3. Tech Stack**
-
-### **Frontend**
-*   **Framework:** Next.js 15 (App Router)
-*   **Language:** TypeScript
-*   **Styling:** Tailwind CSS + ShadCN UI (for consistent, premium admin look)
-*   **State Management:** React Query (TanStack Query) for server state; Zustand for local state if needed.
-*   **Maps:** Mapbox GL JS or Google Maps JavaScript API (Subject to API Key availability).
-
-### **Backend (BaaS)**
-*   **Platform:** Supabase
-*   **Auth:** Supabase Auth (Email/Password for Admins, Phone for Mobile Users).
-*   **Database:** PostgreSQL.
-*   **Realtime:** Supabase Realtime (for live ride tracking).
-*   **Storage:** Supabase Storage (Driver documents, avatars).
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Database Setup](#database-setup)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [Project Structure](#project-structure)
+- [Admin Access](#admin-access)
+- [Available Pages](#available-pages)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ---
 
-## **4. Data Architecture (Schema & Models)**
+## 🌟 Overview
 
-*Note: Must align with existing Mobile MVP Schema.*
+**DriveSmart** is a modern ride-hailing platform admin portal that enables platform administrators to manage users, drivers, bookings, payments, and real-time dispatching. Built with **React 18**, **TypeScript**, and **Supabase**, it features a live map interface powered by **Leaflet** for tracking drivers and managing ride requests.
 
-### **4.1 Core Tables (Proposed)**
-
-| Table Name | Description | Key Columns (Proposed) |
-| :--- | :--- | :--- |
-| **`users`** | End customers | `id`, `email`, `phone`, `full_name`, `avatar_url`, `is_blocked`, `created_at` |
-| **`drivers`** | Verified drivers | `id` (FK to auth), `status` (pending/approved/rejected), `license_number`, `rating`, `is_online`, `current_location` (PostGIS point) |
-| **`admins`** | Dashboard users | `id` (FK to auth), `email`, `role` (admin/dispatcher/support/finance), `created_at` |
-| **`bookings`** | Ride transactions | `id`, `user_id`, `driver_id`, `status`, `pickup_lat/lng`, `drop_lat/lng`, `fare_amount`, `scheduled_time` |
-| **`vehicles`** | User vehicles | `id`, `user_id`, `make`, `model`, `plate_number` |
-| **`documents`** | Compliance docs | `id`, `driver_id`, `type` (license/insurance), `url`, `status` (verified/rejected) |
-| **`payments`** | Financial records | `id`, `booking_id`, `amount`, `status` (pending/paid/refunded), `payment_method` |
-
-### **4.2 Enums & Types**
-*   **`booking_status`**: `requested`, `searching`, `assigned`, `arrived`, `in_progress`, `completed`, `cancelled`.
-*   **`admin_role`**: `admin`, `dispatcher`, `support`, `finance`.
+### Key Highlights
+- ✅ **Real-time Dispatch Console** with interactive maps
+- ✅ **Driver Application Management** (Approve/Reject)
+- ✅ **User Management** (Block/Unblock)
+- ✅ **Bookings Dashboard** with status filtering
+- ✅ **Payments & Finance Tracking**
+- ✅ **System Settings & Pricing Controls**
+- ✅ **Row Level Security (RLS)** for secure data access
 
 ---
 
-## **5. Feature Modules**
+## ✨ Features
 
-### **5.1 Authentication & RBAC**
-*   **Login:** Email/Password implementation for Dashboard staff.
-*   **Role-Based Access Control (RBAC):**
-    *   **Admin:** Full access to all modules.
-    *   **Dispatcher:** Access to Live Map, Bookings, Driver Status. Read-only on Finance.
-    *   **Support:** Access to Users, Drivers, Complaints. No access to Finance or Settings.
-    *   **Finance:** Access to Payments, Analytics. Read-only on Rides.
+### 🔐 Authentication & Authorization
+- Supabase Auth integration
+- Role-based access control (Admin, Customer, Driver, Vehicle Owner)
+- Protected dashboard routes
+- Secure Row Level Security policies
 
-### **5.2 User Management**
-*   **List View:** Sortable table of all users.
-*   **Actions:** Block/Unblock users, view detailed ride history.
-*   **Verification:** Manual flag for "Verified Customer" (optional).
+### 👥 User Management
+- View all registered users
+- Block/Unblock user accounts
+- Search and filter capabilities
+- User profile overview
 
-### **5.3 Driver Management**
-*   **Onboarding Pipeline:** View "Pending" applications.
-*   **Document Review:** UI to view uploaded license images and separate "Approve/Reject" buttons.
-*   **Live Status:** Indicator showing if driver is Online/Offline and "In Ride" / "Idle".
+### 🚙 Driver Management
+- Review driver applications
+- Approve or reject driver requests
+- View driver ratings and ride history
+- Track driver status (Pending, Approved, Rejected, Suspended)
 
-### **5.4 Live Dispatch Console**
-*   **Map View:** Full-screen map showing pins for:
-    *   **Available Drivers** (Green)
-    *   **Busy Drivers** (Red)
-    *   **Unassigned Bookings** (Blinking/Yellow)
-*   **Intervention:** Ability to manually assign a driver to a "stuck" booking.
+### 📍 Dispatch Console
+- **Live map visualization** with Leaflet & OpenStreetMap
+- Real-time driver location tracking
+- Unassigned booking markers
+- Driver status popups (name, email, rating, online status)
+- Statistics dashboard (online drivers, available drivers, unassigned rides)
 
-### **5.5 Booking Management**
-*   **Kanban/List View:** Filter rides by status.
-*   **Details:** See route, timestamps, fare, and participant user/driver.
-*   **Issues:** Flag rides that have exceeded expected duration.
+### 📅 Bookings Dashboard
+- View all ride bookings
+- Filter by status (Requested, Searching, Assigned, In Progress, Completed, Cancelled)
+- Card-based layout with pickup/drop-off addresses
+- Fare and distance information
+- Customer and driver details
 
-### **5.6 Payments & Finance**
-*   **Ledger:** List of all payments.
-*   **Refunds:** Ability for Admins/Finance users to initiate a refund.
+### 💰 Payments & Finance
+- Revenue tracking dashboard
+- Payment history with status filtering
+- Refund processing (placeholder)
+- Transaction details
 
-### **5.7 Settings & Pricing**
-*   **Pricing Config:** Form to update `base_fare`, `per_km_price`, `per_min_price`.
-*   **System Switch:** "Emergency Stop" button to pause all new bookings.
-
----
-
-## **6. Deliverables & Roadmap**
-
-### **Phase 1: Foundation (Current)**
-1.  **Project Setup:** Next.js repo, Supabase connection, Auth implementation.
-2.  **Core Dashboard:** Layout (Sidebar/Navbar) + User/Driver Lists.
-3.  **Booking Management:** List view and details of rides.
-
-### **Phase 2: Real-time & Operations**
-1.  **Live Map:** Mapbox/Google Maps integration for real-time tracking.
-2.  **Dispatcher Controls:** Manual assignment logic.
-3.  **Analytics:** Charts and graphs.
-
-### **Phase 3: Polish**
-1.  **Role Enforcement:** Strict RLS policies and middleware checks.
-2.  **Documentation:** Handbook for operations staff.
+### ⚙️ System Settings
+- **Pricing Configuration**: Base Fare, Per KM, Per Minute
+- **Emergency Stop Toggle**: Pause new bookings system-wide
+- System status monitoring
 
 ---
 
-## **7. Open Questions (To Resolve)**
-1.  **Maps API:** Do we have a Google Maps or Mapbox API key provisioned?
-2.  **Existing Schema:** Can you share the SQL definition of the existing Mobile MVP database? (Crucial for compatibility).
-3.  **Deployment:** Will this be hosted on Vercel, or elsewhere?
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework**: React 18
+- **Build Tool**: Vite 7
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS v4
+- **UI Components**: ShadCN UI (with `slate` base color)
+- **Routing**: React Router DOM v7
+- **Icons**: Lucide React
+- **Maps**: Leaflet + React-Leaflet + OpenStreetMap
+- **Utilities**: `clsx`, `tailwind-merge`, `class-variance-authority`
+
+### Backend (BaaS)
+- **Platform**: Supabase
+- **Database**: PostgreSQL with PostGIS extension
+- **Authentication**: Supabase Auth
+- **Realtime**: Supabase Realtime subscriptions
+- **Storage**: Supabase Storage (planned)
+
+### State Management (Planned)
+- **Server State**: TanStack Query (React Query)
+- **Local State**: Zustand
+
+---
+
+## 📦 Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** 18+ installed
+- **npm** or **yarn** package manager
+- **Supabase Account** (free tier works)
+- **Git** installed
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/mizanmail/DriveSmart.git
+cd DriveSmart
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+This will install all required packages including:
+- React, ReactDOM, TypeScript
+- Vite build tool
+- Supabase client
+- Tailwind CSS, ShadCN UI
+- Leaflet, React-Leaflet
+- React Router DOM
+- And more...
+
+---
+
+## 🗄️ Database Setup
+
+### 1. Create a Supabase Project
+
+1. Go to [supabase.com](https://supabase.com)
+2. Click **"New Project"**
+3. Enter project details and wait for it to initialize
+
+### 2. Get Your Supabase Credentials
+
+1. Go to **Project Settings** → **API**
+2. Copy your:
+   - **Project URL** (e.g., `https://xxxxx.supabase.co`)
+   - **Anon/Public Key** (starts with `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`)
+
+### 3. Run the Database Schema
+
+1. Open **SQL Editor** in your Supabase dashboard
+2. Copy the entire content of `database/schema.sql`
+3. Paste and click **"Run"**
+
+This will create:
+- All database tables (profiles, drivers, vehicles, bookings, payments, admins)
+- Enums for user roles and statuses
+- Row Level Security (RLS) policies
+- Indexes for performance
+- Triggers for `updated_at` timestamps
+- PostGIS extension for geography data
+
+---
+
+## ⚙️ Configuration
+
+### 1. Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+**Important**: Replace the values with your actual Supabase credentials from Step 2 of Database Setup.
+
+### 2. Path Aliases
+
+The project uses `@/*` path aliases mapping to `src/`. This is already configured in:
+- `vite.config.ts`
+- `tsconfig.app.json`
+- `components.json` (for ShadCN)
+
+---
+
+## 🎯 Running the Application
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+The app will start on **http://localhost:5173**
+
+### Production Build
+
+```bash
+npm run build
+```
+
+Output will be in the `dist/` folder.
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+---
+
+## 📁 Project Structure
+
+```
+DriveSmart/
+├── database/
+│   └── schema.sql                 # Complete database schema
+├── src/
+│   ├── components/
+│   │   ├── ui/                    # ShadCN UI components
+│   │   └── ProtectedRoute.tsx    # Route protection wrapper
+│   ├── layouts/
+│   │   └── DashboardLayout.tsx   # Main dashboard layout with sidebar
+│   ├── lib/
+│   │   ├── supabase.ts           # Supabase client config
+│   │   └── utils.ts              # Utility functions (cn helper)
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── Login.tsx         # Login page
+│   │   │   └── Signup.tsx        # Signup page
+│   │   ├── onboarding/
+│   │   │   └── RoleSelection.tsx # Role selection page
+│   │   └── dashboard/
+│   │       ├── Dashboard.tsx     # Dashboard home
+│   │       ├── Users.tsx         # User management
+│   │       ├── Drivers.tsx       # Driver management
+│   │       ├── DispatchConsole.tsx # Live map dispatch
+│   │       ├── Bookings.tsx      # Bookings management
+│   │       ├── Payments.tsx      # Payments & finance
+│   │       └── Settings.tsx      # System settings
+│   ├── App.tsx                   # Main app with routing
+│   ├── main.tsx                  # App entry point
+│   └── index.css                 # Global styles
+├── .env                          # Environment variables
+├── tailwind.config.js            # Tailwind configuration
+├── vite.config.ts                # Vite configuration
+└── README.md                     # This file
+```
+
+---
+
+## 👤 Admin Access
+
+To access the admin dashboard, you need to be registered as an admin.
+
+### Step 1: Sign Up
+
+1. Navigate to http://localhost:5173/signup
+2. Fill in your details:
+   - **Full Name**
+   - **Email**
+   - **Password** (min 6 characters)
+3. Click **"Sign Up"**
+4. You'll be redirected to role selection
+
+### Step 2: Make Yourself an Admin
+
+Run this SQL in your Supabase **SQL Editor**:
+
+```sql
+-- 1. Find your user ID
+SELECT id, email FROM profiles;
+
+-- 2. Insert yourself as admin (replace YOUR_USER_ID with actual UUID)
+INSERT INTO admins (id, role) VALUES ('YOUR_USER_ID', 'admin');
+```
+
+### Step 3: Login
+
+1. Go to http://localhost:5173/login
+2. Enter your credentials
+3. You now have full admin access! 🎉
+
+---
+
+## 📄 Available Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| **Login** | `/login` | Admin login page |
+| **Signup** | `/signup` | New user registration |
+| **Role Selection** | `/role-selection` | Choose user role |
+| **Dashboard Home** | `/dashboard` | Overview & statistics |
+| **Users** | `/dashboard/users` | Manage all users |
+| **Drivers** | `/dashboard/drivers` | Approve/reject driver applications |
+| **Dispatch Console** | `/dashboard/dispatch` | Live map with drivers & bookings |
+| **Bookings** | `/dashboard/bookings` | View and manage all bookings |
+| **Payments** | `/dashboard/payments` | Financial transactions |
+| **Settings** | `/dashboard/settings` | Pricing & system controls |
+
+---
+
+## 🐛 Troubleshooting
+
+### Build Errors
+
+**Issue**: TypeScript errors during build
+
+```bash
+# Clean node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Database Errors
+
+**Issue**: "infinite recursion detected in policy for relation 'admins'"
+
+**Solution**: This was caused by circular RLS policies. Already fixed in the schema. Make sure you ran the latest `database/schema.sql`.
+
+**Issue**: "Could not embed because more than one relationship was found"
+
+**Solution**: Already fixed! The Drivers and Bookings queries now fetch related data separately.
+
+### Map Not Showing
+
+**Issue**: Dispatch Console map is blank
+
+**Solutions**:
+1. Check your internet connection (OpenStreetMap tiles need internet)
+2. Ensure PostGIS extension is enabled in Supabase
+3. Add sample driver data with `is_online=true` and `current_location` set
+
+### Environment Variables Not Working
+
+**Issue**: Can't connect to Supabase
+
+**Solution**:
+1. Ensure `.env` file is in project root
+2. Restart dev server after changing `.env`
+3. Variable names must start with `VITE_` for Vite to include them
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+---
+
+## 🎉 Acknowledgments
+
+- **ShadCN UI** for beautiful components
+- **Leaflet** for map functionality
+- **Supabase** for backend infrastructure
+- **Lucide** for icons
+- **Tailwind CSS** for styling
+
+---
+
+**Built with ❤️ for DriveSmart**
+
+For questions or support, please open an issue on GitHub.
