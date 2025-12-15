@@ -19,6 +19,7 @@
 - [Database Setup](#database-setup)
 - [Configuration](#configuration)
 - [Running the Application](#running-the-application)
+- [Deploying to GitHub](#deploying-to-github)
 - [Project Structure](#project-structure)
 - [Admin Access](#admin-access)
 - [Available Pages](#available-pages)
@@ -229,6 +230,89 @@ Output will be in the `dist/` folder.
 ```bash
 npm run preview
 ```
+
+---
+
+## 🚀 Deploying to GitHub
+
+Once your project is ready, push it to GitHub to share or deploy.
+
+### Step 1: Configure Git (First Time Only)
+
+If you haven't set up Git on your machine:
+
+```bash
+git config --global user.email "your-email@example.com"
+git config --global user.name "Your Name"
+```
+
+### Step 2: Check .gitignore
+
+Ensure your `.env` file is NOT committed (it's already in `.gitignore`):
+
+```bash
+git check-ignore .env
+```
+
+Should return: `.env` ✅
+
+### Step 3: Stage All Changes
+
+```bash
+cd C:\Users\HP\OneDrive\Desktop\DriveSmart
+git add .
+```
+
+### Step 4: Commit Your Changes
+
+```bash
+git commit -m "feat: Complete DriveSmart Admin Portal v1.0
+
+- Implemented authentication & role selection
+- Added user & driver management  
+- Built bookings & payments modules
+- Integrated Leaflet maps for dispatch
+- Added comprehensive documentation"
+```
+
+### Step 5: Push to GitHub
+
+```bash
+git push origin main
+```
+
+**If your default branch is `master`:**
+```bash
+git push origin master
+```
+
+### ✅ Success!
+
+Your code is now live on GitHub! Visit:
+**https://github.com/YOUR_USERNAME/DriveSmart**
+
+---
+
+## 🌐 Deploying to Production
+
+### Option 1: Vercel (Recommended)
+
+1. Go to [vercel.com](https://vercel.com)
+2. Click **"Import Project"**
+3. Select your GitHub repository
+4. Add environment variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. Click **"Deploy"**
+
+### Option 2: Netlify
+
+1. Go to [netlify.com](https://netlify.com)
+2. Click **"New site from Git"**
+3. Connect your GitHub repository
+4. Build command: `npm run build`
+5. Publish directory: `dist`
+6. Add environment variables in **Site settings → Environment**
 
 ---
 
