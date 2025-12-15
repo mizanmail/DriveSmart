@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
-import { MapPin, Clock, DollarSign } from "lucide-react"
+import {
+    Car,
+    Calendar,
+    MoreHorizontal
+} from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import toast from "react-hot-toast"
+import { format } from "date-fns"
 
 interface Booking {
     id: string
@@ -26,6 +34,16 @@ interface Booking {
     } | null
 }
 
+const STATUS_CONFIG: Record<string, { color: string, label: string }> = {
+    requested: { color: "bg-blue-50 text-blue-700 border-blue-200", label: "Requested" },
+    searching: { color: "bg-yellow-50 text-yellow-700 border-yellow-200", label: "Searching" },
+    assigned: { color: "bg-purple-50 text-purple-700 border-purple-200", label: "Driver Assigned" },
+    arrived: { color: "bg-indigo-50 text-indigo-700 border-indigo-200", label: "Driver Arrived" },
+    in_progress: { color: "bg-orange-50 text-orange-700 border-orange-200", label: "In Progress" },
+    completed: { color: "bg-green-50 text-green-700 border-green-200", label: "Completed" },
+    cancelled: { color: "bg-red-50 text-red-700 border-red-200", label: "Cancelled" },
+}
+
 export default function Bookings() {
     const [bookings, setBookings] = useState<Booking[]>([])
     const [loading, setLoading] = useState(true)
@@ -33,26 +51,18 @@ export default function Bookings() {
 
     useEffect(() => {
         fetchBookings()
-    }, [filter])
+    }, [])
 
     const fetchBookings = async () => {
         setLoading(true)
-        let query = supabase
+        const { data, error } = await supabase
             .from("bookings")
             .select("*")
             .order("created_at", { ascending: false })
 
-        if (filter !== "all") {
-            query = query.eq("status", filter)
-        }
-
-        const { data, error } = await query
-
         if (error) {
-            console.error("Error fetching bookings:", error)
-            setBookings([])
+            toast.error("Failed to fetch bookings")
         } else {
-            // Fetch related data separately to avoid ambiguous relationships
             const bookingsWithData = await Promise.all(
                 (data || []).map(async (booking) => {
                     const [customerData, driverData] = await Promise.all([
@@ -76,101 +86,168 @@ export default function Bookings() {
         setLoading(false)
     }
 
-    const getStatusColor = (status: string) => {
-        const colors: Record<string, string> = {
-            requested: "bg-blue-100 text-blue-800",
-            searching: "bg-yellow-100 text-yellow-800",
-            assigned: "bg-purple-100 text-purple-800",
-            arrived: "bg-indigo-100 text-indigo-800",
-            in_progress: "bg-orange-100 text-orange-800",
-            completed: "bg-green-100 text-green-800",
-            cancelled: "bg-red-100 text-red-800",
+    const filteredBookings = bookings.filter(b => filter === "all" || b.status === filter)
+
+    // Animation variants
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
         }
-        return colors[status] || "bg-gray-100 text-gray-800"
     }
 
-    if (loading) {
-        return <div className="p-8">Loading...</div>
-    }
+
 
     return (
-        <div className="p-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold">Bookings Management</h1>
-                <p className="text-muted-foreground">Monitor and manage all ride bookings</p>
+        <motion.div
+            initial="hidden"
+            animate="show"
+            variants={container}
+            className="space-y-8"
+        >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Bookings</h1>
+                    <p className="text-slate-500 mt-1">Track and manage ride requests in real-time</p>
+                </div>
+                <Button onClick={fetchBookings} variant="outline" className="gap-2">
+                    Refresh
+                </Button>
             </div>
 
-            <div className="mb-4 flex gap-2 flex-wrap">
-                {["all", "requested", "searching", "assigned", "in_progress", "completed", "cancelled"].map((status) => (
+            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                {["all", "requested", "assigned", "in_progress", "completed", "cancelled"].map((status) => (
                     <Button
                         key={status}
-                        size="sm"
                         variant={filter === status ? "default" : "outline"}
                         onClick={() => setFilter(status)}
+                        className={`capitalize whitespace-nowrap ${filter === status ? 'bg-slate-900' : ''}`}
+                        size="sm"
                     >
-                        {status.replace("_", " ").charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
+                        {status.replace("_", " ")}
                     </Button>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {bookings.map((booking) => (
-                    <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <CardTitle className="text-sm font-medium">
-                                    Booking #{booking.id.slice(0, 8)}
-                                </CardTitle>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                    {booking.status.replace("_", " ")}
-                                </span>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex items-start gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="font-medium text-green-600">Pickup</p>
-                                    <p className="text-muted-foreground">{booking.pickup_address || "Address not set"}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="font-medium text-red-600">Drop-off</p>
-                                    <p className="text-muted-foreground">{booking.drop_address || "Address not set"}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                                <div className="flex items-center gap-1 text-sm">
-                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-semibold">${booking.fare_amount?.toFixed(2) || "0.00"}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-sm">
-                                    <Clock className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-muted-foreground">{booking.distance_km?.toFixed(1) || "0"} km</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-2 border-t space-y-1 text-xs text-muted-foreground">
-                                <p><span className="font-medium">Customer:</span> {booking.customer?.full_name || booking.customer?.email || "N/A"}</p>
-                                <p><span className="font-medium">Driver:</span> {booking.driver?.profiles?.full_name || booking.driver?.profiles?.email || "Not assigned"}</p>
-                                <p><span className="font-medium">Created:</span> {new Date(booking.created_at).toLocaleString()}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                    {loading ? (
+                        [...Array(6)].map((_, i) => (
+                            <div key={i} className="h-64 bg-slate-100 rounded-xl animate-pulse" />
+                        ))
+                    ) : filteredBookings.length === 0 ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200"
+                        >
+                            <Car size={48} className="mx-auto mb-4 opacity-50" />
+                            <p>No bookings found matching this filter.</p>
+                        </motion.div>
+                    ) : (
+                        filteredBookings.map((booking) => (
+                            <BookingCard key={booking.id} booking={booking} />
+                        ))
+                    )}
+                </AnimatePresence>
             </div>
+        </motion.div>
+    )
+}
 
-            {bookings.length === 0 && (
-                <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                        No bookings found for the selected filter.
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+function BookingCard({ booking }: { booking: Booking }) {
+    const status = STATUS_CONFIG[booking.status] || { color: "bg-slate-100", label: booking.status }
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+        >
+            <Card className="border-slate-100 shadow-sm hover:shadow-md transition-all group overflow-hidden">
+                <CardHeader className="pb-3 border-b border-slate-50 bg-slate-50/30">
+                    <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs font-mono text-slate-400">ID: #{booking.id.slice(0, 8)}</span>
+                            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border w-fit ${status.color}`}>
+                                {status.label}
+                            </span>
+                        </div>
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <Calendar size={12} />
+                            {format(new Date(booking.created_at), 'MMM d, HH:mm')}
+                        </span>
+                    </div>
+                </CardHeader>
+
+                <CardContent className="pt-4 space-y-4">
+                    <div className="relative pl-4 space-y-6 before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                        {/* Pickup */}
+                        <div className="relative">
+                            <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-slate-400 bg-white" />
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pickup</p>
+                                <p className="text-sm font-medium text-slate-900 leading-snug line-clamp-2">
+                                    {booking.pickup_address || "Location not set"}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Dropoff */}
+                        <div className="relative">
+                            <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-slate-900 bg-slate-900" />
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dropoff</p>
+                                <p className="text-sm font-medium text-slate-900 leading-snug line-clamp-2">
+                                    {booking.drop_address || "Location not set"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                        <div className="flex -space-x-2">
+                            {/* Customer Avatar */}
+                            <div className="relative group/tooltip">
+                                <Avatar className="h-8 w-8 border-2 border-white ring-1 ring-slate-100">
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.customer?.full_name}`} />
+                                    <AvatarFallback>C</AvatarFallback>
+                                </Avatar>
+                            </div>
+                            {/* Driver Avatar */}
+                            {booking.driver && (
+                                <div className="relative group/tooltip">
+                                    <Avatar className="h-8 w-8 border-2 border-white ring-1 ring-slate-100">
+                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.driver.profiles?.full_name}`} />
+                                        <AvatarFallback>D</AvatarFallback>
+                                    </Avatar>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="text-right">
+                            <p className="text-lg font-bold text-slate-900">
+                                ${booking.fare_amount?.toFixed(2) || "0.00"}
+                            </p>
+                            <p className="text-xs text-slate-500">{booking.distance_km?.toFixed(1) || 0} km</p>
+                        </div>
+                    </div>
+                </CardContent>
+
+                <CardFooter className="bg-slate-50 p-3 flex justify-between items-center border-t border-slate-100">
+                    <Button size="sm" variant="ghost" className="text-slate-500 h-8 text-xs hover:text-slate-900">
+                        View Details
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8">
+                        <MoreHorizontal size={16} />
+                    </Button>
+                </CardFooter>
+            </Card>
+        </motion.div>
     )
 }

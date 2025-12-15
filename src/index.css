@@ -1,3 +1,290 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+
+    /* CSS Variables for Design System */
+    :root {
+        --color-primary: #3b82f6;
+        --color-primary-dark: #2563eb;
+        --color-secondary: #a855f7;
+        --color-success: #10b981;
+        --color-warning: #f59e0b;
+        --color-error: #ef4444;
+
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.5);
+
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --gradient-ocean: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --gradient-sunset: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    * {
+        @apply border-slate-200;
+    }
+
+    body {
+        @apply bg-slate-50 text-slate-900 antialiased;
+        font-family: var(--font-sans);
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-slate-100;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-slate-300 rounded-full;
+        transition: background-color 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-400;
+    }
+}
+
+@layer components {
+
+    /* Glassmorphism Card */
+    .glass-card {
+        @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl;
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+        @apply bg-clip-text text-transparent;
+        background-image: var(--gradient-primary);
+    }
+
+    /* Hover Lift Effect */
+    .hover-lift {
+        transition: transform 0.3s cubic-bezier(0, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* Animated Gradient Background */
+    .animated-gradient {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+
+    /* Shimmer Loading Effect */
+    .shimmer {
+        background: linear-gradient(90deg,
+                #f0f0f0 0%,
+                #f8f8f8 50%,
+                #f0f0f0 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    /* Pulse Animation for Notifications */
+    .pulse-ring {
+        animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Custom Button Styles */
+    .btn-primary {
+        @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold;
+        @apply hover:bg-blue-700 active:scale-95;
+        @apply transition-all duration-200;
+        @apply shadow-lg hover:shadow-xl;
+    }
+
+    .btn-secondary {
+        @apply bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold;
+        @apply hover:bg-purple-700 active:scale-95;
+        @apply transition-all duration-200;
+    }
+
+    /* Modern Input Styles */
+    .input-modern {
+        @apply w-full px-4 py-3 rounded-xl border-2 border-slate-200;
+        @apply focus:border-blue-500 focus:ring-4 focus:ring-blue-100;
+        @apply transition-all duration-200 outline-none;
+        @apply bg-white text-slate-900;
+    }
+
+    /* Card Styles */
+    .card-modern {
+        @apply bg-white rounded-2xl shadow-md hover:shadow-xl;
+        @apply transition-all duration-300;
+        @apply border border-slate-100;
+    }
+
+    /* Status Badges */
+    .badge-success {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+        @apply bg-green-100 text-green-800;
+    }
+
+    .badge-warning {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .badge-error {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+        @apply bg-red-100 text-red-800;
+    }
+
+    .badge-info {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+        @apply bg-blue-100 text-blue-800;
+    }
+}
+
+@layer utilities {
+
+    /* Text Gradients */
+    .text-gradient-primary {
+        @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+    }
+
+    .text-gradient-success {
+        @apply bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent;
+    }
+
+    /* Background Gradients */
+    .bg-gradient-primary {
+        background: var(--gradient-primary);
+    }
+
+    .bg-gradient-ocean {
+        background: var(--gradient-ocean);
+    }
+
+    .bg-gradient-sunset {
+        background: var(--gradient-sunset);
+    }
+}
+
+/* Keyframe Animations */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulse-ring {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Utility Animations */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+}
+
+/* Skeleton Loader */
+.skeleton {
+    @apply animate-pulse bg-slate-200 rounded;
+}
+
+/* Focus Visible for Accessibility */
+*:focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-500 rounded;
+}
